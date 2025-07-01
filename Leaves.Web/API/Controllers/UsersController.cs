@@ -1,5 +1,6 @@
 using Leaves.Application.DTOs.Users;
 using Leaves.Application.Interfaces;
+using Leaves.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +8,7 @@ namespace Leaves.Web.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = nameof(UserRole.Admin))]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;

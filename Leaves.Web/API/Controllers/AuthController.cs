@@ -2,8 +2,6 @@ using Leaves.Application.Interfaces;
 using Leaves.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Leaves.Application.DTOs.Users;
-using Leaves.Domain.Entities;
-using Leaves.Domain.Enums;
 
 namespace Leaves.Web.Controllers;
 
@@ -18,29 +16,6 @@ public class AuthController : ControllerBase
     {
         _context = context;
         _jwtTokenGenerator = jwtTokenGenerator;
-    }
-
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
-    {
-        var existingUser = _context.Users.FirstOrDefault(x => x.Email == request.Email);
-        if (existingUser != null)
-            return BadRequest("User with this email already exists.");
-
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            FullName = request.FullName,
-            Email = request.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            Role = UserRole.Employee,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "User registered successfully" });
     }
 
     [HttpPost("login")]

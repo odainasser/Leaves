@@ -12,6 +12,7 @@ using System.Text;
 using Leaves.Infrastructure.Settings;
 using Leaves.Infrastructure.Authentication;
 using Microsoft.OpenApi.Models;
+using Leaves.Infrastructure.SeedData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -108,6 +109,28 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Ensure database is created and seeded
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    try
+    {
+        // Ensure database is created and migrations are applied
+        context.Database.EnsureCreated();
+        // Or use: context.Database.Migrate(); if you're using migrations
+        
+        // Seed the database
+        DatabaseSeeder.Seed(context);
+        
+        Console.WriteLine("Database seeding completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
