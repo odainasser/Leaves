@@ -21,7 +21,9 @@ public class UserService : IUserService
             Id = Guid.NewGuid(),
             FullName = request.FullName,
             Email = request.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            PasswordHash = !string.IsNullOrEmpty(request.Password) 
+                ? BCrypt.Net.BCrypt.HashPassword(request.Password)
+                : throw new ArgumentException("Password cannot be null or empty"),
             Role = request.Role,
             CreatedAt = DateTime.UtcNow
         };

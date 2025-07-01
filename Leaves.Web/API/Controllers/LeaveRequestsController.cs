@@ -1,11 +1,13 @@
 using Leaves.Application.DTOs.Leaves;
 using Leaves.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Leaves.Web.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class LeaveRequestsController : ControllerBase
 {
     private readonly ILeaveRequestService _leaveService;
