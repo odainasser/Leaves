@@ -1,6 +1,6 @@
-namespace Leaves.Application.DTOs.Users;
-
 using Leaves.Domain.Enums;
+
+namespace Leaves.Application.DTOs.Users;
 
 public class UserResponse
 {

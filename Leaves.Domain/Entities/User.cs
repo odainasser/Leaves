@@ -10,4 +10,5 @@ public class User
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+    public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
 }

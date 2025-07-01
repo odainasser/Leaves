@@ -12,6 +12,8 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<LeaveRequest> LeaveRequests { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
