@@ -4,6 +4,8 @@ using Leaves.Domain.Interfaces;
 using Leaves.Infrastructure.Repositories;
 using Leaves.Application.Services;
 using Leaves.Application.Interfaces;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+
+// Add FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssembly(typeof(Leaves.Application.Validators.Users.CreateUserRequestValidator).Assembly);
 
 // Add controllers
 builder.Services.AddControllers();
@@ -44,8 +50,3 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
