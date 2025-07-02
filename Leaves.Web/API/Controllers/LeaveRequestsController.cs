@@ -1,5 +1,6 @@
 using Leaves.Application.DTOs.Leaves;
 using Leaves.Application.Interfaces;
+using Leaves.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +18,6 @@ public class LeaveRequestsController : ControllerBase
         _leaveService = leaveService;
     }
 
-    // GET: api/LeaveRequests
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -25,7 +25,6 @@ public class LeaveRequestsController : ControllerBase
         return Ok(result);
     }
 
-    // GET: api/LeaveRequests/{id}
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -33,7 +32,6 @@ public class LeaveRequestsController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
-    // GET: api/LeaveRequests/employee/{employeeId}
     [HttpGet("employee/{employeeId}")]
     public async Task<IActionResult> GetByEmployeeId(Guid employeeId)
     {
@@ -41,7 +39,6 @@ public class LeaveRequestsController : ControllerBase
         return Ok(result);
     }
 
-    // POST: api/LeaveRequests
     [HttpPost]
     public async Task<IActionResult> Create(CreateLeaveRequestRequest request)
     {
@@ -49,7 +46,6 @@ public class LeaveRequestsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    // PUT: api/LeaveRequests/{id}
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, UpdateLeaveRequestRequest request)
     {
@@ -57,7 +53,6 @@ public class LeaveRequestsController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
-    // DELETE: api/LeaveRequests/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -69,8 +64,8 @@ public class LeaveRequestsController : ControllerBase
         return NoContent();
     }
 
-    // PATCH: api/LeaveRequests/{id}/approve
     [HttpPatch("{id}/approve")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> Approve(Guid id)
     {
         var existing = await _leaveService.GetLeaveRequestByIdAsync(id);
@@ -81,8 +76,8 @@ public class LeaveRequestsController : ControllerBase
         return Ok(new { message = "Leave request approved." });
     }
 
-    // PATCH: api/LeaveRequests/{id}/reject
     [HttpPatch("{id}/reject")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> Reject(Guid id)
     {
         var existing = await _leaveService.GetLeaveRequestByIdAsync(id);
