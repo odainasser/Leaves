@@ -6,6 +6,15 @@ import Link from 'next/link';
 import AdminLayout from '@/components/layouts/AdminLayout';
 import Pagination from '@/components/ui/Pagination';
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function MyLeaveRequestsPage() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +33,9 @@ export default function MyLeaveRequestsPage() {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       setLeaveRequests(sortedRequests);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch your leave requests');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || apiError.message || 'Failed to fetch your leave requests');
       console.error(err);
     }
   };
@@ -36,8 +46,9 @@ export default function MyLeaveRequestsPage() {
         await leaveRequestService.deleteMyLeaveRequest(id);
         setLeaveRequests(leaveRequests.filter((request) => request.id !== id));
         setError(null);
-      } catch (err: any) {
-        setError(err.message || 'Failed to delete leave request');
+      } catch (err) {
+        const apiError = err as ApiError;
+        setError(apiError.response?.data?.message || apiError.message || 'Failed to delete leave request');
         console.error(err);
       }
     }
@@ -98,7 +109,7 @@ export default function MyLeaveRequestsPage() {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No leave requests yet</h3>
-            <p className="text-gray-500 mb-4">You haven't submitted any leave requests.</p>
+            <p className="text-gray-500 mb-4">You havent submitted any leave requests.</p>
             <Link
               href="/my-leave-requests/create"
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium transition-colors"

@@ -7,6 +7,15 @@ import LeaveRequestForm from '@/components/forms/LeaveRequestForm';
 import { leaveRequestService, CreateLeaveRequestRequest } from '@/services/leaveRequestService';
 import Link from 'next/link';
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function CreateMyLeaveRequestPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -18,9 +27,9 @@ export default function CreateMyLeaveRequestPage() {
       setError(null);
       await leaveRequestService.createMyLeaveRequest(data);
       router.push('/my-leave-requests');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create leave request');
-      console.error(err);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || apiError.message || 'Failed to create leave request');
     } finally {
       setIsLoading(false);
     }

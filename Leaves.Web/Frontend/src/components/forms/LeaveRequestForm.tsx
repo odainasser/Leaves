@@ -203,7 +203,7 @@ export default function LeaveRequestForm({
               value={formData.employeeId}
               onChange={handleChange}
               disabled={!canEdit}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black"
               required
             >
               <option value="">Select an employee</option>
@@ -233,7 +233,7 @@ export default function LeaveRequestForm({
               value={formData.startDate}
               onChange={handleChange}
               disabled={!canEdit}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded [&::-webkit-calendar-picker-indicator]:hover:bg-gray-100 [&::-webkit-input-placeholder]:text-gray-600 [&::-webkit-input-placeholder]:font-medium"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded [&::-webkit-calendar-picker-indicator]:hover:bg-gray-100 [&::-webkit-input-placeholder]:text-black [&::-webkit-input-placeholder]:font-medium"
               placeholder="Select start date"
               required
             />
@@ -255,7 +255,7 @@ export default function LeaveRequestForm({
               value={formData.endDate}
               onChange={handleChange}
               disabled={!canEdit}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded [&::-webkit-calendar-picker-indicator]:hover:bg-gray-100 [&::-webkit-input-placeholder]:text-gray-600 [&::-webkit-input-placeholder]:font-medium"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-black [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded [&::-webkit-calendar-picker-indicator]:hover:bg-gray-100 [&::-webkit-input-placeholder]:text-black [&::-webkit-input-placeholder]:font-medium"
               placeholder="Select end date"
               required
             />

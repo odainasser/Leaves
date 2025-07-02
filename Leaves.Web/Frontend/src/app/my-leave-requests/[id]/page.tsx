@@ -6,6 +6,15 @@ import AdminLayout from '@/components/layouts/AdminLayout';
 import { leaveRequestService, LeaveRequest } from '@/services/leaveRequestService';
 import Link from 'next/link';
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function MyLeaveRequestDetailsPage() {
   const { id } = useParams();
   const [leaveRequest, setLeaveRequest] = useState<LeaveRequest | null>(null);
@@ -22,8 +31,9 @@ export default function MyLeaveRequestDetailsPage() {
       setError(null);
       const data = await leaveRequestService.getMyLeaveRequestById(id as string);
       setLeaveRequest(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch leave request details');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || apiError.message || 'Failed to fetch leave request details');
       console.error(err);
     } finally {
       setLoading(false);

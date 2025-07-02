@@ -7,6 +7,15 @@ import LeaveRequestForm from '@/components/forms/LeaveRequestForm';
 import { leaveRequestService, LeaveRequest, UpdateLeaveRequestRequest } from '@/services/leaveRequestService';
 import Link from 'next/link';
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function EditMyLeaveRequestPage() {
   const params = useParams();
   const router = useRouter();
@@ -29,8 +38,9 @@ export default function EditMyLeaveRequestPage() {
         return;
       }
       setLeaveRequest(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load leave request');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || apiError.message || 'Failed to load leave request');
       console.error(err);
     } finally {
       setLoading(false);
@@ -43,8 +53,9 @@ export default function EditMyLeaveRequestPage() {
       setError(null);
       await leaveRequestService.updateMyLeaveRequest(params.id as string, data);
       router.push('/my-leave-requests');
-    } catch (err: any) {
-      setError(err.message || 'Failed to update leave request');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || apiError.message || 'Failed to update leave request');
       console.error(err);
     } finally {
       setIsLoading(false);
