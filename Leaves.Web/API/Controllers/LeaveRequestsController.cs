@@ -3,6 +3,7 @@ using Leaves.Application.Interfaces;
 using Leaves.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Leaves.Web.Controllers;
 
@@ -110,5 +111,90 @@ public class LeaveRequestsController : ControllerBase
 
         await _leaveService.RejectLeaveRequestAsync(id);
         return Ok(new { message = "Leave request rejected." });
+    }
+
+    [HttpGet("my-requests")]
+    public async Task<IActionResult> GetMyLeaveRequests()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return BadRequest("Invalid user ID");
+
+        var result = await _leaveService.GetLeaveRequestsByEmployeeIdAsync(userId);
+        return Ok(result);
+    }
+
+    [HttpPost("my-requests")]
+    public async Task<IActionResult> CreateMyLeaveRequest(CreateLeaveRequestRequest request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return BadRequest(new { message = "Invalid user ID" });
+
+            // Override the employee ID with the logged-in user's ID
+            request.EmployeeId = userId;
+
+            // Validate the request
+            if (request.StartDate >= request.EndDate)
+                return BadRequest(new { message = "End date must be after start date" });
+
+            if (string.IsNullOrWhiteSpace(request.Reason))
+                return BadRequest(new { message = "Reason is required" });
+
+            var result = await _leaveService.CreateLeaveRequestAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "Failed to create leave request", error = ex.Message });
+        }
+    }
+
+    [HttpPut("my-requests/{id}")]
+    public async Task<IActionResult> UpdateMyLeaveRequest(Guid id, UpdateLeaveRequestRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return BadRequest("Invalid user ID");
+
+        var existing = await _leaveService.GetLeaveRequestByIdAsync(id);
+        if (existing is null)
+            return NotFound();
+
+        // Check if the leave request belongs to the current user
+        if (existing.EmployeeId != userId)
+            return Forbid("You can only edit your own leave requests");
+
+        // Only allow editing pending requests
+        if (existing.Status != LeaveStatus.Pending)
+            return BadRequest("You can only edit pending leave requests");
+
+        var result = await _leaveService.UpdateLeaveRequestAsync(id, request);
+        return Ok(result);
+    }
+
+    [HttpDelete("my-requests/{id}")]
+    public async Task<IActionResult> DeleteMyLeaveRequest(Guid id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return BadRequest("Invalid user ID");
+
+        var existing = await _leaveService.GetLeaveRequestByIdAsync(id);
+        if (existing is null)
+            return NotFound();
+
+        // Check if the leave request belongs to the current user
+        if (existing.EmployeeId != userId)
+            return Forbid("You can only delete your own leave requests");
+
+        // Only allow deleting pending requests
+        if (existing.Status != LeaveStatus.Pending)
+            return BadRequest("You can only delete pending leave requests");
+
+        await _leaveService.DeleteLeaveRequestAsync(id);
+        return NoContent();
     }
 }

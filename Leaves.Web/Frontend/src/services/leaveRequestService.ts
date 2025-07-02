@@ -1,15 +1,15 @@
 import { api } from './api';
-import { AxiosError } from 'axios';
 
 export interface LeaveRequest {
   id: string;
-  status: number;
+  employeeId: string;
   startDate: string;
   endDate: string;
   reason: string;
+  status: number;
   createdAt: string;
   updatedAt: string;
-  employee: {
+  employee?: {
     id: string;
     fullName: string;
     email: string;
@@ -17,10 +17,10 @@ export interface LeaveRequest {
 }
 
 export interface CreateLeaveRequestRequest {
+  employeeId?: string;
   startDate: string;
   endDate: string;
   reason: string;
-  employeeId: string;
 }
 
 export interface UpdateLeaveRequestRequest {
@@ -29,79 +29,60 @@ export interface UpdateLeaveRequestRequest {
   reason: string;
 }
 
-export const leaveRequestService = {
+class LeaveRequestService {
   async getAll(): Promise<LeaveRequest[]> {
-    try {
-      const response = await api.get('/api/LeaveRequests');
-      return response.data;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Error fetching leave requests:', axiosError.response?.data || axiosError.message);
-      throw error;
-    }
-  },
+    const response = await api.get('/api/LeaveRequests');
+    return response.data;
+  }
 
   async getById(id: string): Promise<LeaveRequest> {
-    try {
-      console.log('Fetching leave request with ID:', id);
-      const response = await api.get(`/api/LeaveRequests/${id}`);
-      return response.data;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Error fetching leave request:', axiosError.response?.data || axiosError.message);
-      throw error;
-    }
-  },
+    const response = await api.get(`/api/LeaveRequests/${id}`);
+    return response.data;
+  }
 
-  async create(request: CreateLeaveRequestRequest): Promise<LeaveRequest> {
-    try {
-      const response = await api.post('/api/LeaveRequests', request);
-      return response.data;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Error creating leave request:', axiosError.response?.data || axiosError.message);
-      throw error;
-    }
-  },
+  async create(data: CreateLeaveRequestRequest): Promise<LeaveRequest> {
+    const response = await api.post('/api/LeaveRequests', data);
+    return response.data;
+  }
 
-  async update(id: string, request: UpdateLeaveRequestRequest): Promise<LeaveRequest> {
-    try {
-      const response = await api.put(`/api/LeaveRequests/${id}`, request);
-      return response.data;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Error updating leave request:', axiosError.response?.data || axiosError.message);
-      throw error;
-    }
-  },
+  async update(id: string, data: UpdateLeaveRequestRequest): Promise<LeaveRequest> {
+    const response = await api.put(`/api/LeaveRequests/${id}`, data);
+    return response.data;
+  }
 
   async delete(id: string): Promise<void> {
-    try {
-      await api.delete(`/api/LeaveRequests/${id}`);
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Error deleting leave request:', axiosError.response?.data || axiosError.message);
-      throw error;
-    }
-  },
+    await api.delete(`/api/LeaveRequests/${id}`);
+  }
 
   async approve(id: string): Promise<void> {
-    try {
-      await api.patch(`/api/LeaveRequests/${id}/approve`);
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Error approving leave request:', axiosError.response?.data || axiosError.message);
-      throw error;
-    }
-  },
+    await api.patch(`/api/LeaveRequests/${id}/approve`);
+  }
 
   async reject(id: string): Promise<void> {
-    try {
-      await api.patch(`/api/LeaveRequests/${id}/reject`);
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Error rejecting leave request:', axiosError.response?.data || axiosError.message);
-      throw error;
-    }
+    await api.patch(`/api/LeaveRequests/${id}/reject`);
   }
-};
+
+  // Employee-specific methods
+  async getMyLeaveRequests(): Promise<LeaveRequest[]> {
+    const response = await api.get('/api/LeaveRequests/my-requests');
+    return response.data;
+  }
+
+  async createMyLeaveRequest(data: CreateLeaveRequestRequest): Promise<LeaveRequest> {
+    // Remove employeeId from the request as it will be set by the backend
+    const { employeeId, ...requestData } = data;
+    const response = await api.post('/api/LeaveRequests/my-requests', requestData);
+    return response.data;
+  }
+
+  async updateMyLeaveRequest(id: string, data: UpdateLeaveRequestRequest): Promise<LeaveRequest> {
+    const response = await api.put(`/api/LeaveRequests/my-requests/${id}`, data);
+    return response.data;
+  }
+
+  async deleteMyLeaveRequest(id: string): Promise<void> {
+    await api.delete(`/api/LeaveRequests/my-requests/${id}`);
+  }
+}
+
+export const leaveRequestService = new LeaveRequestService();

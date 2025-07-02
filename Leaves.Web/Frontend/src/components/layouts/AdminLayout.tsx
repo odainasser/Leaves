@@ -13,9 +13,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navigationItems = [
     { name: "Dashboard", href: "/dashboard", icon: "📊" },
-    { name: "Users", href: "/users", icon: "👥" },
-    { name: "Leave Requests", href: "/leave-requests", icon: "📋" },
+    { name: "Users", href: "/users", icon: "👥", adminOnly: true },
+    { name: "Leave Requests", href: "/leave-requests", icon: "📋", adminOnly: true },
+    { name: "My Leave Requests", href: "/my-leave-requests", icon: "📝" },
   ];
+
+  // Filter navigation items based on user role
+  const filteredNavigationItems = navigationItems.filter((item) => {
+    // Admin can see all pages
+    if (user?.role === 1) {
+      return true;
+    }
+    
+    // Employees can only see non-admin-only pages
+    if (item.adminOnly && user?.role !== 1) {
+      return false;
+    }
+    
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -61,7 +77,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <aside className="w-64 bg-white shadow-sm min-h-screen">
           <nav className="mt-6">
             <div className="px-3">
-              {navigationItems.map((item) => (
+              {filteredNavigationItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
