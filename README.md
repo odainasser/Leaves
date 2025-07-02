@@ -2,6 +2,24 @@
 
 A comprehensive leave management system built with .NET Core Web API backend and Next.js frontend, following Clean Architecture principles.
 
+## Default Seeder Accounts
+
+The application automatically creates default user accounts when it starts for the first time. These accounts are useful for testing and initial setup:
+
+### Administrator Account
+- **Email**: `admin@example.com`
+- **Password**: `admin123`
+- **Role**: Admin
+- **Full Name**: Administrator
+
+### Employee Account
+- **Email**: `employee@example.com`
+- **Password**: `employee123`
+- **Role**: Employee
+- **Full Name**: John Employee
+
+⚠️ **Security Note**: These are default development credentials. In production environments, change these passwords immediately after first login and consider implementing proper user registration workflows.
+
 ## Project Structure
 
 ```
@@ -138,6 +156,7 @@ No Visual Studio required - just the power of cross-platform development! 🚀
 2. Start the frontend (`npm run dev` from Leaves.Web/frontend)
    - Frontend runs on `http://localhost:3000`
 3. Access the application at `http://localhost:3000`
+4. **Login with default accounts** (see Default Seeder Accounts section above)
 
 ### Building for Production
 
