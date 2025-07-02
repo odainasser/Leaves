@@ -20,6 +20,12 @@ public class LeaveRequestRepository : ILeaveRequestRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task UpdateAsync(LeaveRequest leaveRequest)
+    {
+        _context.LeaveRequests.Update(leaveRequest);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task DeleteAsync(LeaveRequest leaveRequest)
     {
         _context.LeaveRequests.Remove(leaveRequest);
@@ -28,25 +34,37 @@ public class LeaveRequestRepository : ILeaveRequestRepository
 
     public async Task<IEnumerable<LeaveRequest>> GetAllAsync()
     {
-        return await _context.LeaveRequests.AsNoTracking().ToListAsync();
+        return await _context.LeaveRequests
+            .Include(lr => lr.Employee)
+            .ToListAsync();
     }
 
     public async Task<LeaveRequest?> GetByIdAsync(Guid id)
     {
-        return await _context.LeaveRequests.FindAsync(id);
+        return await _context.LeaveRequests
+            .Include(lr => lr.Employee)
+            .FirstOrDefaultAsync(lr => lr.Id == id);
     }
 
     public async Task<IEnumerable<LeaveRequest>> GetByEmployeeIdAsync(Guid employeeId)
     {
         return await _context.LeaveRequests
-            .Where(x => x.EmployeeId == employeeId)
-            .AsNoTracking()
+            .Include(lr => lr.Employee)
+            .Where(lr => lr.EmployeeId == employeeId)
             .ToListAsync();
     }
 
-    public async Task UpdateAsync(LeaveRequest leaveRequest)
+    public async Task<IEnumerable<LeaveRequest>> GetAllWithEmployeeAsync()
     {
-        _context.LeaveRequests.Update(leaveRequest);
-        await _context.SaveChangesAsync();
+        return await _context.LeaveRequests
+            .Include(lr => lr.Employee)
+            .ToListAsync();
+    }
+
+    public async Task<LeaveRequest?> GetByIdWithEmployeeAsync(Guid id)
+    {
+        return await _context.LeaveRequests
+            .Include(lr => lr.Employee)
+            .FirstOrDefaultAsync(lr => lr.Id == id);
     }
 }

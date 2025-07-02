@@ -10,4 +10,6 @@ public interface ILeaveRequestRepository
     Task AddAsync(LeaveRequest leaveRequest);
     Task UpdateAsync(LeaveRequest leaveRequest);
     Task DeleteAsync(LeaveRequest leaveRequest);
+    Task<IEnumerable<LeaveRequest>> GetAllWithEmployeeAsync();
+    Task<LeaveRequest?> GetByIdWithEmployeeAsync(Guid id);
 }

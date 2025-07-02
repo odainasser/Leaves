@@ -30,7 +30,10 @@ public class LeaveRequestService : ILeaveRequestService
 
         await _leaveRequestRepository.AddAsync(leaveRequest);
 
-        return MapToResponse(leaveRequest);
+        // Get the leave request with employee data loaded
+        var createdLeaveRequest = await _leaveRequestRepository.GetByIdAsync(leaveRequest.Id);
+        
+        return MapToResponse(createdLeaveRequest!);
     }
 
     public async Task DeleteLeaveRequestAsync(Guid id)
@@ -105,7 +108,20 @@ public class LeaveRequestService : ILeaveRequestService
             StartDate = leave.StartDate,
             EndDate = leave.EndDate,
             Reason = leave.Reason,
-            Status = leave.Status
+            Status = leave.Status,
+            CreatedAt = leave.CreatedAt,
+            UpdatedAt = leave.UpdatedAt,
+            Employee = leave.Employee != null ? new EmployeeInfo
+            {
+                Id = leave.Employee.Id,
+                FullName = leave.Employee.FullName,
+                Email = leave.Employee.Email
+            } : new EmployeeInfo
+            {
+                Id = leave.EmployeeId,
+                FullName = "Unknown Employee",
+                Email = "No email available"
+            }
         };
     }
 }
