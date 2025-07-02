@@ -20,6 +20,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> GetAll()
     {
         var result = await _leaveService.GetAllLeaveRequestsAsync();
@@ -27,6 +28,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _leaveService.GetLeaveRequestByIdAsync(id);
@@ -34,6 +36,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet("employee/{employeeId}")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> GetByEmployeeId(Guid employeeId)
     {
         var result = await _leaveService.GetLeaveRequestsByEmployeeIdAsync(employeeId);
@@ -41,6 +44,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> Create(CreateLeaveRequestRequest request)
     {
         var result = await _leaveService.CreateLeaveRequestAsync(request);
@@ -48,6 +52,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> Update(Guid id, UpdateLeaveRequestRequest request)
     {
         var result = await _leaveService.UpdateLeaveRequestAsync(id, request);
@@ -55,6 +60,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> Delete(Guid id)
     {
         var existing = await _leaveService.GetLeaveRequestByIdAsync(id);
@@ -66,6 +72,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet("stats/pending")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> GetPendingCount()
     {
         var allRequests = await _leaveService.GetAllLeaveRequestsAsync();
@@ -74,6 +81,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet("stats/approved")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> GetApprovedCount()
     {
         var allRequests = await _leaveService.GetAllLeaveRequestsAsync();
@@ -82,6 +90,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet("stats/rejected")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> GetRejectedCount()
     {
         var allRequests = await _leaveService.GetAllLeaveRequestsAsync();
@@ -121,6 +130,24 @@ public class LeaveRequestsController : ControllerBase
             return BadRequest("Invalid user ID");
 
         var result = await _leaveService.GetLeaveRequestsByEmployeeIdAsync(userId);
+        return Ok(result);
+    }
+
+    [HttpGet("my-requests/{id}")]
+    public async Task<IActionResult> GetMyLeaveRequestById(Guid id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return BadRequest("Invalid user ID");
+
+        var result = await _leaveService.GetLeaveRequestByIdAsync(id);
+        if (result is null)
+            return NotFound();
+
+        // Check if the leave request belongs to the current user
+        if (result.EmployeeId != userId)
+            return Forbid("You can only view your own leave requests");
+
         return Ok(result);
     }
 

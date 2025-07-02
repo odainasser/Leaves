@@ -19,7 +19,7 @@ export default function MyLeaveRequestDetailsPage() {
   const fetchLeaveRequestDetails = async () => {
     try {
       setLoading(true);
-      const data = await leaveRequestService.getById(id as string);
+      const data = await leaveRequestService.getMyLeaveRequestById(id as string);
       setLeaveRequest(data);
     } catch (err) {
       setError('Failed to fetch leave request details');

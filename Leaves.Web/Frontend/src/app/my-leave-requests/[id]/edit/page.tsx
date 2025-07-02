@@ -22,7 +22,7 @@ export default function EditMyLeaveRequestPage() {
   const loadLeaveRequest = async () => {
     try {
       setLoading(true);
-      const data = await leaveRequestService.getById(params.id as string);
+      const data = await leaveRequestService.getMyLeaveRequestById(params.id as string);
       if (data.status !== 0) {
         setError('You can only edit pending leave requests');
         return;

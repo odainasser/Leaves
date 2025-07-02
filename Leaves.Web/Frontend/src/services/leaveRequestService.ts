@@ -30,6 +30,7 @@ export interface UpdateLeaveRequestRequest {
 }
 
 class LeaveRequestService {
+  // Admin methods - require admin role
   async getAll(): Promise<LeaveRequest[]> {
     const response = await api.get('/api/LeaveRequests');
     return response.data;
@@ -62,9 +63,14 @@ class LeaveRequestService {
     await api.patch(`/api/LeaveRequests/${id}/reject`);
   }
 
-  // Employee-specific methods
+  // Employee-specific methods - separate endpoints
   async getMyLeaveRequests(): Promise<LeaveRequest[]> {
     const response = await api.get('/api/LeaveRequests/my-requests');
+    return response.data;
+  }
+
+  async getMyLeaveRequestById(id: string): Promise<LeaveRequest> {
+    const response = await api.get(`/api/LeaveRequests/my-requests/${id}`);
     return response.data;
   }
 
