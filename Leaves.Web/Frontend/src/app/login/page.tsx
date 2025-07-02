@@ -14,7 +14,18 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && authenticated) {
-      router.push('/dashboard');
+      // Redirect based on user role
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        if (user.role === 1) {
+          router.push('/dashboard'); // Admin goes to dashboard
+        } else {
+          router.push('/my-leave-requests'); // Employee goes to their requests
+        }
+      } else {
+        router.push('/dashboard'); // Fallback
+      }
     }
   }, [authenticated, loading, router]);
 
@@ -35,7 +46,13 @@ export default function LoginPage() {
         setToken(data.token);
         // Store user data as well
         localStorage.setItem('user', JSON.stringify(data.user));
-        router.push('/dashboard');
+        
+        // Redirect based on user role
+        if (data.user.role === 1) {
+          router.push('/dashboard'); // Admin goes to dashboard
+        } else {
+          router.push('/my-leave-requests'); // Employee goes to their requests
+        }
       } else {
         const errorText = await res.text();
         setError(errorText || 'Login failed');

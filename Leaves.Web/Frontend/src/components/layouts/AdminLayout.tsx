@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout } = useAuth();
 
   const navigationItems = [
-    { name: "Dashboard", href: "/dashboard", icon: "📊" },
+    { name: "Dashboard", href: "/dashboard", icon: "📊", adminOnly: true },
     { name: "Users", href: "/users", icon: "👥", adminOnly: true },
     { name: "Leave Requests", href: "/leave-requests", icon: "📋", adminOnly: true },
     { name: "My Leave Requests", href: "/my-leave-requests", icon: "📝" },

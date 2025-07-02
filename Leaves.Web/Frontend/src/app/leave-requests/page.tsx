@@ -44,36 +44,6 @@ export default function LeaveRequestsPage() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    if (confirm('Are you sure you want to approve this leave request?')) {
-      try {
-        setActionLoading(id);
-        await leaveRequestService.approve(id);
-        await fetchLeaveRequests(); // Refresh the list
-      } catch (err) {
-        setError('Failed to approve leave request');
-        console.error(err);
-      } finally {
-        setActionLoading(null);
-      }
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    if (confirm('Are you sure you want to reject this leave request?')) {
-      try {
-        setActionLoading(id);
-        await leaveRequestService.reject(id);
-        await fetchLeaveRequests(); // Refresh the list
-      } catch (err) {
-        setError('Failed to reject leave request');
-        console.error(err);
-      } finally {
-        setActionLoading(null);
-      }
-    }
-  };
-
   const handleStatusChange = async (id: string, newStatus: number) => {
     try {
       setActionLoading(id);
@@ -213,18 +183,22 @@ export default function LeaveRequestsPage() {
                       >
                         View
                       </Link>
-                      <Link
-                        href={`/leave-requests/${request.id}/edit`}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(request.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
+                      {request.status === 0 && (
+                        <>
+                          <Link
+                            href={`/leave-requests/${request.id}/edit`}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(request.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

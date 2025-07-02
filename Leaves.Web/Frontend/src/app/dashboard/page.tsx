@@ -4,8 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminLayout from "@/components/layouts/AdminLayout";
-import { userService } from "@/services/userService";
-import { leaveRequestService } from "@/services/leaveRequestService";
 
 interface DashboardStats {
   pendingRequests: number;
@@ -23,14 +21,17 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!loading && !authenticated) {
       router.push("/login");
+    } else if (!loading && authenticated && user?.role !== 1) {
+      // Redirect non-admin users to their leave requests page
+      router.push("/my-leave-requests");
     }
-  }, [authenticated, loading, router]);
+  }, [authenticated, loading, user, router]);
 
   useEffect(() => {
-    if (authenticated) {
+    if (authenticated && user?.role === 1) {
       fetchDashboardData();
     }
-  }, [authenticated]);
+  }, [authenticated, user]);
 
   const fetchDashboardData = async () => {
     try {
@@ -101,7 +102,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!authenticated) return null;
+  if (!authenticated || user?.role !== 1) return null;
 
   return (
     <AdminLayout>
