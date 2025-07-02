@@ -8,9 +8,9 @@ import { leaveRequestService, CreateLeaveRequestRequest } from '@/services/leave
 import Link from 'next/link';
 
 export default function CreateMyLeaveRequestPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleSubmit = async (data: CreateLeaveRequestRequest) => {
     try {
@@ -18,8 +18,8 @@ export default function CreateMyLeaveRequestPage() {
       setError(null);
       await leaveRequestService.createMyLeaveRequest(data);
       router.push('/my-leave-requests');
-    } catch (err) {
-      setError('Failed to create leave request');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create leave request');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -48,7 +48,11 @@ export default function CreateMyLeaveRequestPage() {
         )}
 
         <div className="bg-white shadow rounded-lg p-6">
-          <LeaveRequestForm onSubmit={handleSubmit} isLoading={isLoading} hideEmployeeField />
+          <LeaveRequestForm 
+            onSubmit={handleSubmit} 
+            isLoading={isLoading} 
+            hideEmployeeField 
+          />
         </div>
       </div>
     </AdminLayout>

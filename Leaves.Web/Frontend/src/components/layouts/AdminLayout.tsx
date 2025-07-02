@@ -15,22 +15,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Dashboard", href: "/dashboard", icon: "📊", adminOnly: true },
     { name: "Users", href: "/users", icon: "👥", adminOnly: true },
     { name: "Leave Requests", href: "/leave-requests", icon: "📋", adminOnly: true },
-    { name: "My Leave Requests", href: "/my-leave-requests", icon: "📝" },
+    { name: "My Leave Requests", href: "/my-leave-requests", icon: "📝", employeeOnly: true },
   ];
 
   // Filter navigation items based on user role
   const filteredNavigationItems = navigationItems.filter((item) => {
-    // Admin can see all pages
+    // Admin can see admin-only pages but not employee-only pages
     if (user?.role === 1) {
-      return true;
+      return item.adminOnly || (!item.adminOnly && !item.employeeOnly);
     }
     
-    // Employees can only see non-admin-only pages
-    if (item.adminOnly && user?.role !== 1) {
-      return false;
+    // Employees can see employee-only pages and general pages but not admin-only pages
+    if (user?.role === 2) {
+      return !item.adminOnly;
     }
     
-    return true;
+    return false;
   });
 
   return (

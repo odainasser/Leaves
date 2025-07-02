@@ -6,9 +6,19 @@ import { LeaveRequest, CreateLeaveRequestRequest, UpdateLeaveRequestRequest } fr
 
 interface LeaveRequestFormProps {
   leaveRequest?: LeaveRequest;
-  onSubmit: (data: CreateLeaveRequestRequest | UpdateLeaveRequestRequest) => void;
+  onSubmit: (data: CreateLeaveRequestRequest | UpdateLeaveRequestRequest) => Promise<void>;
   isLoading?: boolean;
   hideEmployeeField?: boolean;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      errors?: Record<string, string | string[]>;
+      message?: string;
+    };
+  };
+  message?: string;
 }
 
 export default function LeaveRequestForm({ 
@@ -27,6 +37,7 @@ export default function LeaveRequestForm({
   const [employees, setEmployees] = useState<User[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(!hideEmployeeField);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Check if this is an edit form for a non-pending request
   const isEditingNonPendingRequest = leaveRequest && leaveRequest.status !== 0;
@@ -59,28 +70,50 @@ export default function LeaveRequestForm({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!canEdit) return;
     
+    // Clear previous errors
+    setError(null);
+    setFieldErrors({});
+    
     if (!hideEmployeeField && !formData.employeeId) {
-      setError('Please select an employee');
+      setFieldErrors({ employeeId: 'Please select an employee' });
       return;
     }
 
     if (!formData.startDate || !formData.endDate || !formData.reason.trim()) {
-      setError('Please fill in all required fields');
+      const errors: Record<string, string> = {};
+      if (!formData.startDate) errors.startDate = 'Start date is required';
+      if (!formData.endDate) errors.endDate = 'End date is required';
+      if (!formData.reason.trim()) errors.reason = 'Reason is required';
+      setFieldErrors(errors);
       return;
     }
 
     if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      setError('End date must be after start date');
+      setFieldErrors({ endDate: 'End date must be after start date' });
       return;
     }
 
-    setError(null);
-    onSubmit(formData);
+    try {
+      await onSubmit(formData);
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.response?.data?.errors) {
+        // Handle validation errors from API
+        const validationErrors: Record<string, string> = {};
+        for (const [field, messages] of Object.entries(apiError.response.data.errors)) {
+          const fieldKey = field.charAt(0).toLowerCase() + field.slice(1);
+          validationErrors[fieldKey] = Array.isArray(messages) ? messages[0] : messages;
+        }
+        setFieldErrors(validationErrors);
+      } else {
+        setError(apiError.response?.data?.message || apiError.message || 'An error occurred while saving the leave request.');
+      }
+    }
   };
 
   const getStatusText = (status: number) => {
@@ -159,7 +192,7 @@ export default function LeaveRequestForm({
       {!hideEmployeeField && (
         <div>
           <label htmlFor="employeeId" className="block text-sm font-medium text-gray-700 mb-2">
-            Employee *
+            Employee <span className="text-red-500">*</span>
           </label>
           {loadingEmployees ? (
             <div className="text-sm text-gray-500">Loading employees...</div>
@@ -181,13 +214,16 @@ export default function LeaveRequestForm({
               ))}
             </select>
           )}
+          {fieldErrors.employeeId && (
+            <div className="text-red-600 text-sm mt-1">{fieldErrors.employeeId}</div>
+          )}
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-            Start Date *
+            Start Date <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <input
@@ -202,11 +238,14 @@ export default function LeaveRequestForm({
               required
             />
           </div>
+          {fieldErrors.startDate && (
+            <div className="text-red-600 text-sm mt-1">{fieldErrors.startDate}</div>
+          )}
         </div>
 
         <div>
           <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-            End Date *
+            End Date <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <input
@@ -221,12 +260,15 @@ export default function LeaveRequestForm({
               required
             />
           </div>
+          {fieldErrors.endDate && (
+            <div className="text-red-600 text-sm mt-1">{fieldErrors.endDate}</div>
+          )}
         </div>
       </div>
 
       <div>
         <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
-          Reason *
+          Reason <span className="text-red-500">*</span>
         </label>
         <textarea
           id="reason"
@@ -239,6 +281,9 @@ export default function LeaveRequestForm({
           placeholder="Please provide a reason for your leave request..."
           required
         />
+        {fieldErrors.reason && (
+          <div className="text-red-600 text-sm mt-1">{fieldErrors.reason}</div>
+        )}
       </div>
 
       {error && (

@@ -123,6 +123,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet("my-requests")]
+    [Authorize(Roles = nameof(UserRole.Employee))]
     public async Task<IActionResult> GetMyLeaveRequests()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -134,6 +135,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet("my-requests/{id}")]
+    [Authorize(Roles = nameof(UserRole.Employee))]
     public async Task<IActionResult> GetMyLeaveRequestById(Guid id)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -152,6 +154,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPost("my-requests")]
+    [Authorize(Roles = nameof(UserRole.Employee))]
     public async Task<IActionResult> CreateMyLeaveRequest(CreateLeaveRequestRequest request)
     {
         try
@@ -180,6 +183,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPut("my-requests/{id}")]
+    [Authorize(Roles = nameof(UserRole.Employee))]
     public async Task<IActionResult> UpdateMyLeaveRequest(Guid id, UpdateLeaveRequestRequest request)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -203,6 +207,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpDelete("my-requests/{id}")]
+    [Authorize(Roles = nameof(UserRole.Employee))]
     public async Task<IActionResult> DeleteMyLeaveRequest(Guid id)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

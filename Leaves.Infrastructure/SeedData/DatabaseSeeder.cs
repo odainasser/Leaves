@@ -11,7 +11,7 @@ public static class DatabaseSeeder
         try
         {
             // Check if admin user specifically exists
-            var adminUser = context.Users.FirstOrDefault(u => u.Email == "admin@admin.com");
+            var adminUser = context.Users.FirstOrDefault(u => u.Email == "admin@example.com");
             
             if (adminUser == null)
             {
@@ -21,7 +21,7 @@ public static class DatabaseSeeder
                 {
                     Id = Guid.NewGuid(),
                     FullName = "Administrator",
-                    Email = "admin@admin.com",
+                    Email = "admin@example.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
                     Role = UserRole.Admin,
                     CreatedAt = DateTime.UtcNow
@@ -35,6 +35,33 @@ public static class DatabaseSeeder
             else
             {
                 Console.WriteLine($"Admin user already exists with email: {adminUser.Email}");
+            }
+            
+            // Check if employee user specifically exists
+            var employeeUser = context.Users.FirstOrDefault(u => u.Email == "employee@example.com");
+            
+            if (employeeUser == null)
+            {
+                Console.WriteLine("Employee user not found. Creating employee user...");
+                
+                employeeUser = new User
+                {
+                    Id = Guid.NewGuid(),
+                    FullName = "John Employee",
+                    Email = "employee@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("employee123"),
+                    Role = UserRole.Employee,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                context.Users.Add(employeeUser);
+                context.SaveChanges();
+                
+                Console.WriteLine($"Employee user created with email: {employeeUser.Email}");
+            }
+            else
+            {
+                Console.WriteLine($"Employee user already exists with email: {employeeUser.Email}");
             }
             
             // Log all existing users for debugging

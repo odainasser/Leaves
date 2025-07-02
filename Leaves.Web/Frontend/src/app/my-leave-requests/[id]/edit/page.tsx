@@ -22,14 +22,15 @@ export default function EditMyLeaveRequestPage() {
   const loadLeaveRequest = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await leaveRequestService.getMyLeaveRequestById(params.id as string);
       if (data.status !== 0) {
         setError('You can only edit pending leave requests');
         return;
       }
       setLeaveRequest(data);
-    } catch (err) {
-      setError('Failed to load leave request');
+    } catch (err: any) {
+      setError(err.message || 'Failed to load leave request');
       console.error(err);
     } finally {
       setLoading(false);
@@ -42,8 +43,8 @@ export default function EditMyLeaveRequestPage() {
       setError(null);
       await leaveRequestService.updateMyLeaveRequest(params.id as string, data);
       router.push('/my-leave-requests');
-    } catch (err) {
-      setError('Failed to update leave request');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update leave request');
       console.error(err);
     } finally {
       setIsLoading(false);

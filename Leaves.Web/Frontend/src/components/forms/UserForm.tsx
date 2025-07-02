@@ -5,8 +5,18 @@ import { CreateUserRequest, UpdateUserRequest, User } from '@/services/userServi
 
 interface UserFormProps {
   user?: User;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: CreateUserRequest | UpdateUserRequest) => Promise<void>;
   isLoading?: boolean;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      errors?: Record<string, string | string[]>;
+      message?: string;
+    };
+  };
+  message?: string;
 }
 
 export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
@@ -16,6 +26,9 @@ export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
     password: '',
     role: 2
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -31,23 +44,42 @@ export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (user) {
-      // Update - don't include password if empty
-      const updateData: UpdateUserRequest = {
-        fullName: formData.fullName,
-        email: formData.email,
-        role: formData.role
-      };
-      await onSubmit(updateData);
-    } else {
-      // Create - include password
-      const createData: CreateUserRequest = {
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
-      };
-      await onSubmit(createData);
+    // Clear previous errors
+    setErrors({});
+    setGeneralError('');
+    
+    try {
+      if (user) {
+        // Update - don't include password if empty
+        const updateData: UpdateUserRequest = {
+          fullName: formData.fullName,
+          email: formData.email,
+          role: formData.role
+        };
+        await onSubmit(updateData);
+      } else {
+        // Create - include password
+        const createData: CreateUserRequest = {
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        };
+        await onSubmit(createData);
+      }
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.response?.data?.errors) {
+        // Handle validation errors from API
+        const validationErrors: Record<string, string> = {};
+        for (const [field, messages] of Object.entries(apiError.response.data.errors)) {
+          const fieldKey = field.charAt(0).toLowerCase() + field.slice(1);
+          validationErrors[fieldKey] = Array.isArray(messages) ? messages[0] : messages;
+        }
+        setErrors(validationErrors);
+      } else {
+        setGeneralError(apiError.response?.data?.message || apiError.message || 'An error occurred while saving the user.');
+      }
     }
   };
 
@@ -63,7 +95,7 @@ export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
-          Full Name
+          Full Name <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -74,11 +106,12 @@ export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
           required
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         />
+        {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
       </div>
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email
+          Email <span className="text-red-500">*</span>
         </label>
         <input
           type="email"
@@ -89,12 +122,13 @@ export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
           required
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
         />
+        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
       </div>
 
       {!user && (
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
+            Password <span className="text-red-500">*</span>
           </label>
           <input
             type="password"
@@ -105,12 +139,13 @@ export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
             required
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
           />
+          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
         </div>
       )}
 
       <div>
         <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-          Role
+          Role <span className="text-red-500">*</span>
         </label>
         <select
           id="role"
@@ -122,7 +157,10 @@ export default function UserForm({ user, onSubmit, isLoading }: UserFormProps) {
           <option value={2}>Employee</option>
           <option value={1}>Admin</option>
         </select>
+        {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
       </div>
+
+      {generalError && <p className="mt-1 text-sm text-red-600">{generalError}</p>}
 
       <div className="flex justify-end space-x-3">
         <button
