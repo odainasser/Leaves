@@ -64,6 +64,30 @@ public class LeaveRequestsController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("stats/pending")]
+    public async Task<IActionResult> GetPendingCount()
+    {
+        var allRequests = await _leaveService.GetAllLeaveRequestsAsync();
+        var pendingCount = allRequests.Count(r => r.Status == LeaveStatus.Pending);
+        return Ok(new { count = pendingCount });
+    }
+
+    [HttpGet("stats/approved")]
+    public async Task<IActionResult> GetApprovedCount()
+    {
+        var allRequests = await _leaveService.GetAllLeaveRequestsAsync();
+        var approvedCount = allRequests.Count(r => r.Status == LeaveStatus.Approved);
+        return Ok(new { count = approvedCount });
+    }
+
+    [HttpGet("stats/rejected")]
+    public async Task<IActionResult> GetRejectedCount()
+    {
+        var allRequests = await _leaveService.GetAllLeaveRequestsAsync();
+        var rejectedCount = allRequests.Count(r => r.Status == LeaveStatus.Rejected);
+        return Ok(new { count = rejectedCount });
+    }
+
     [HttpPatch("{id}/approve")]
     [Authorize(Roles = nameof(UserRole.Admin))]
     public async Task<IActionResult> Approve(Guid id)
