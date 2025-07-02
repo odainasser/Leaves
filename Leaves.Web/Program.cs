@@ -16,123 +16,138 @@ using Leaves.Infrastructure.SeedData;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure DB Context
+// ----------------------------------------------------
+// 🔗 Configure Database
+// ----------------------------------------------------
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// Register Repositories and Services
+// ----------------------------------------------------
+// 🔗 Configure CORS
+// ----------------------------------------------------
+var allowedOrigins = "AllowFrontend";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: allowedOrigins, policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Next.js Frontend URL
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials()
+              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // Cache preflight for 24 hours
+    });
+});
+
+// ----------------------------------------------------
+// 🔗 Configure JWT Authentication
+// ----------------------------------------------------
+var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
+builder.Services.Configure<JwtSettings>(jwtSettingsSection);
+var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.Issuer,
+
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.Audience,
+
+            ValidateLifetime = true,
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+
+            ClockSkew = TimeSpan.Zero // Token expires exactly
+        };
+    });
+
+// ----------------------------------------------------
+// 🔗 Dependency Injection
+// ----------------------------------------------------
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
-// Configure JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidIssuer = jwtSettings.Issuer,
-        
-        ValidateAudience = true,
-        ValidAudience = jwtSettings.Audience,
-        
-        ValidateLifetime = true,
-        
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
-        
-        ClockSkew = TimeSpan.Zero // Optional: No delay on token expiry
-    };
-    
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
-            return Task.CompletedTask;
-        },
-        OnChallenge = context =>
-        {
-            Console.WriteLine($"Challenge: {context.Error}, {context.ErrorDescription}");
-            return Task.CompletedTask;
-        }
-    };
-});
-
-// Add FluentValidation
+// ----------------------------------------------------
+// 🔗 FluentValidation
+// ----------------------------------------------------
 builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssembly(typeof(Leaves.Application.Validators.Users.CreateUserRequestValidator).Assembly);
+builder.Services.AddValidatorsFromAssemblyContaining<Leaves.Application.Validators.Users.CreateUserRequestValidator>();
 
-// Add controllers
+// ----------------------------------------------------
+// 🔗 Controllers
+// ----------------------------------------------------
 builder.Services.AddControllers();
 
-// Add Swagger services
+// ----------------------------------------------------
+// 🔗 Swagger (With JWT Authorization Button)
+// ----------------------------------------------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Leaves API", Version = "v1" });
-    
+
+    // 🔐 JWT Authentication in Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+        Description = @"JWT Authorization header using the Bearer scheme. 
+                        Enter 'Bearer' [space] and then your token in the text input below.
+                        Example: 'Bearer eyJhbGci...'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
             },
-            new string[] {}
+            new List<string>()
         }
     });
 });
 
+// ----------------------------------------------------
+// 🔥 Build App
+// ----------------------------------------------------
 var app = builder.Build();
 
-// Ensure database is created and seeded
+// ----------------------------------------------------
+// 🔗 Database Migration + Seeding
+// ----------------------------------------------------
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
     try
     {
-        // Ensure database is created and migrations are applied
-        context.Database.EnsureCreated();
-        // Or use: context.Database.Migrate(); if you're using migrations
-        
-        // Seed the database
-        DatabaseSeeder.Seed(context);
-        
-        Console.WriteLine("Database seeding completed successfully.");
+        context.Database.Migrate(); // Run pending migrations
+        DatabaseSeeder.Seed(context); // Seed Admin User
+        Console.WriteLine("✅ Database seeding completed.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+        Console.WriteLine($"❌ DB Error: {ex.Message}");
     }
 }
 
-// Configure the HTTP request pipeline.
+// ----------------------------------------------------
+// 🔗 Middleware Pipeline
+// ----------------------------------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(c =>
@@ -146,6 +161,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(allowedOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
