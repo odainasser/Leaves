@@ -32,11 +32,20 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: allowedOrigins, policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // Next.js Frontend URL
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // Next.js Frontend URL
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()
-              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // Cache preflight for 24 hours
+              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)) // Cache preflight for 24 hours
+              .WithExposedHeaders("*"); // Expose all headers
+    });
+
+    // Add a more permissive policy for development
+    options.AddPolicy("Development", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
@@ -162,7 +171,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors(allowedOrigins);
+// Use different CORS policy based on environment
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("Development");
+}
+else
+{
+    app.UseCors(allowedOrigins);
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
